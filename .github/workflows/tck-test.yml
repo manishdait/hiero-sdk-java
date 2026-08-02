@@ -1,0 +1,71 @@
+name: Test TCK endpoints
+
+on:
+    push:
+    pull_request:
+
+permissions:
+    contents: read
+
+jobs:
+    tck-test:
+        name: "Run TCK test"
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Harden the runner (Audit all outbound calls)
+              uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+              with:
+                  egress-policy: audit
+
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Setup Java
+              uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+              with:
+                distribution: temurin
+                java-version: "21.0.6"
+
+            - name: Setup Gradle
+              uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+              with:
+                cache-read-only: false
+
+            - name: Prepare Hiero Solo
+              id: solo
+              uses: hiero-ledger/hiero-solo-action@531a2b283ca4912df537d64bf89da0f6be4c2574 # v0.22.0
+              with:
+                  installMirrorNode: true
+                  soloVersion: v0.74.0
+                  mirrorNodeVersion: v0.153.0
+                  hieroVersion: v0.73.0
+
+            - name: Build SDK
+              run: ./gradlew assemble
+
+            - name: Start TCK Server
+              run: |
+                  nohup ./gradlew bootJar > tck-server.log 2>&1 &
+                  echo "TCK_PID=$!" >> $GITHUB_ENV
+
+            - name: Wait for TCK Server Readiness
+              run: |
+                  echo "Waiting for TCK server to accept connections"
+
+                  for i in {1..30}; do
+                    if curl -s -f -X POST http://localhost:8544/ \
+                         -H "Content-Type: application/json" \
+                         -d '{"jsonrpc":"2.0","method":"setup","params":{},"id":1}' > /dev/null 2>&1; then
+                      echo "✅ TCK Server is ready and responding!"
+                      exit 0
+                    fi
+                    echo "Waiting for TCK server... (Attempt $i/30)"
+                    sleep 2
+                  done
+
+                  echo "Server failed to start on http://localhost:8544/ within 60 seconds."
+                  exit 1
+
+            - name: Run TCK test
+              uses: manishdait/hiero-tck-runner@fb08545a52bad551358979352ab2035fca3a9588
