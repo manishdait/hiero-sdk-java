@@ -4,9 +4,6 @@ name: PR Checks
 on:
   push:
     branches:
-      - main
-      - develop
-      - release/*
   pull_request:
     branches:
       - main
@@ -29,7 +26,7 @@ env:
 jobs:
   build:
     name: Build
-    runs-on: hiero-client-sdk-linux-medium
+    runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -63,7 +60,7 @@ jobs:
 
   test:
     name: Unit and Integration Tests
-    runs-on: hiero-client-sdk-linux-medium
+    runs-on: ubuntu-latest
     needs:
       - build
     steps:
@@ -137,7 +134,7 @@ jobs:
 
   test-dab:
     name: Test Dynamic Addressbook
-    runs-on: hiero-client-sdk-linux-medium
+    runs-on: ubuntu-latest
     needs:
       - build
     steps:
@@ -194,7 +191,7 @@ jobs:
 
   run-examples:
     name: Run Examples
-    runs-on: hiero-client-sdk-linux-medium
+    runs-on: ubuntu-latest
     needs:
       - build
     steps:
@@ -249,7 +246,7 @@ jobs:
 
   test-tck:
     name: TCK Tests
-    runs-on: hiero-client-sdk-linux-medium
+    runs-on: ubuntu-latest
     needs:
       - build
     steps:
