@@ -205,8 +205,8 @@ public class MirrorNodeContractQueryMockTest {
     void callFailsWhenTimeoutExpires() {
         var query = new MirrorNodeContractCallQuery().setContractId(CONTRACT_ID).setFunctionParameters(MOCK_CALL_DATA);
 
-        // use short timeout 1ms
-        assertThatThrownBy(() -> query.execute(client, Duration.ofMillis(1)))
+        // use short timeout 1ns
+        assertThatThrownBy(() -> query.execute(client, Duration.ofNanos(1)))
                 .isInstanceOf(ExecutionException.class)
                 .cause()
                 .hasMessageContaining("deadline-exceeded-error");
@@ -308,13 +308,13 @@ public class MirrorNodeContractQueryMockTest {
 
     @Test
     @DisplayName("Gas estimation gives up when the timeout expires.")
-    void estimateFailsWhenTimeoutExpires() {
+    void estimateFailsWhenTimeoutExpires() throws ExecutionException, InterruptedException {
         var query = new MirrorNodeContractEstimateGasQuery()
                 .setContractId(CONTRACT_ID)
                 .setFunctionParameters(MOCK_CALL_DATA);
 
-        // use short timeout 1ms
-        assertThatThrownBy(() -> query.execute(client, Duration.ofMillis(1)))
+        // use short timeout 1ns
+        assertThatThrownBy(() -> query.execute(client, Duration.ofNanos(1)))
                 .isInstanceOf(ExecutionException.class)
                 .cause()
                 .hasMessageContaining("deadline-exceeded-error");
